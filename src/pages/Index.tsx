@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 interface ApiKey {
   id: string;
@@ -18,6 +19,8 @@ interface ApiKey {
   type: "llm" | "search";
   key: string;
   lastUsed: string;
+  usageLimit: number;
+  currentUsage: number;
 }
 
 const generateApiKey = () => {
@@ -31,7 +34,26 @@ const generateApiKey = () => {
 };
 
 const Index = () => {
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([
+    {
+      id: "1",
+      name: "Production LLM",
+      type: "llm",
+      key: generateApiKey(),
+      lastUsed: "2024-03-10",
+      usageLimit: 1000,
+      currentUsage: 750,
+    },
+    {
+      id: "2",
+      name: "Test Search",
+      type: "search",
+      key: generateApiKey(),
+      lastUsed: "2024-03-11",
+      usageLimit: 500,
+      currentUsage: 125,
+    },
+  ]);
 
   const handleCreateKey = (name: string, type: "llm" | "search") => {
     const newKey: ApiKey = {
@@ -40,12 +62,18 @@ const Index = () => {
       type,
       key: generateApiKey(),
       lastUsed: "",
+      usageLimit: type === "llm" ? 1000 : 500,
+      currentUsage: 0,
     };
     setApiKeys((prev) => [...prev, newKey]);
   };
 
   const handleDeleteKey = (id: string) => {
     setApiKeys((prev) => prev.filter((key) => key.id !== id));
+  };
+
+  const calculateUsagePercentage = (current: number, limit: number) => {
+    return Math.round((current / limit) * 100);
   };
 
   return (
@@ -74,6 +102,7 @@ const Index = () => {
                 <TableHead>Type</TableHead>
                 <TableHead>Key</TableHead>
                 <TableHead>Last Used</TableHead>
+                <TableHead>Weekly Usage</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -88,6 +117,17 @@ const Index = () => {
                   </TableCell>
                   <TableCell className="font-mono">{apiKey.key}</TableCell>
                   <TableCell>{apiKey.lastUsed || "Never"}</TableCell>
+                  <TableCell className="w-[200px]">
+                    <div className="space-y-2">
+                      <Progress 
+                        value={calculateUsagePercentage(apiKey.currentUsage, apiKey.usageLimit)} 
+                        className="h-2"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {apiKey.currentUsage} / {apiKey.usageLimit} requests
+                      </p>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <button
                       onClick={() => handleDeleteKey(apiKey.id)}
