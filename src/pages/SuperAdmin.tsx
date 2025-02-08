@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,129 +11,86 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { UserPlus, Users } from "lucide-react";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "user";
-  status: "active" | "suspended" | "pending";
-  apiKeys: {
-    id: string;
-    name: string;
-    type: "llm" | "search";
-    currentUsage: number;
-    usageLimit: number;
-    lastUsed: string;
-    status: "approved" | "pending";
-  }[];
-}
+import { useApiKeys } from "@/hooks/useApiKeys";
 
 const SuperAdmin = () => {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@example.com",
-      role: "user",
-      status: "active",
-      apiKeys: [
-        {
-          id: "key1",
-          name: "Production API",
-          type: "llm",
-          currentUsage: 750,
-          usageLimit: 1000,
-          lastUsed: "2024-03-10",
-          status: "approved",
-        },
-        {
-          id: "key2",
-          name: "Development API",
-          type: "search",
-          currentUsage: 0,
-          usageLimit: 500,
-          lastUsed: "-",
-          status: "pending",
-        },
-      ],
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "admin",
-      status: "active",
-      apiKeys: [
-        {
-          id: "key3",
-          name: "Test API",
-          type: "search",
-          currentUsage: 250,
-          usageLimit: 500,
-          lastUsed: "2024-03-11",
-          status: "approved",
-        },
-      ],
-    },
-    {
-      id: "3",
-      name: "Alice Johnson",
-      email: "alice@example.com",
-      role: "user",
-      status: "pending",
-      apiKeys: [
-        {
-          id: "key4",
-          name: "New API",
-          type: "llm",
-          currentUsage: 0,
-          usageLimit: 1000,
-          lastUsed: "-",
-          status: "pending",
-        },
-      ],
-    },
-  ]);
+  const {
+    users,
+    setUsers,
+    approveApiKey,
+    toggleUserStatus,
+  } = useApiKeys();
+
+  useEffect(() => {
+    setUsers([
+      {
+        id: "1",
+        name: "John Doe",
+        email: "john@example.com",
+        role: "user",
+        status: "active",
+        apiKeys: [
+          {
+            id: "key1",
+            name: "Production API",
+            type: "llm",
+            currentUsage: 750,
+            usageLimit: 1000,
+            lastUsed: "2024-03-10",
+            status: "approved",
+          },
+          {
+            id: "key2",
+            name: "Development API",
+            type: "search",
+            currentUsage: 0,
+            usageLimit: 500,
+            lastUsed: "-",
+            status: "pending",
+          },
+        ],
+      },
+      {
+        id: "2",
+        name: "Jane Smith",
+        email: "jane@example.com",
+        role: "admin",
+        status: "active",
+        apiKeys: [
+          {
+            id: "key3",
+            name: "Test API",
+            type: "search",
+            currentUsage: 250,
+            usageLimit: 500,
+            lastUsed: "2024-03-11",
+            status: "approved",
+          },
+        ],
+      },
+      {
+        id: "3",
+        name: "Alice Johnson",
+        email: "alice@example.com",
+        role: "user",
+        status: "pending",
+        apiKeys: [
+          {
+            id: "key4",
+            name: "New API",
+            type: "llm",
+            currentUsage: 0,
+            usageLimit: 1000,
+            lastUsed: "-",
+            status: "pending",
+          },
+        ],
+      },
+    ]);
+  }, []);
 
   const calculateUsagePercentage = (current: number, limit: number) => {
     return Math.round((current / limit) * 100);
-  };
-
-  const handleStatusToggle = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((user) => {
-        if (user.id === userId) {
-          return {
-            ...user,
-            status: user.status === "active" ? "suspended" : "active",
-          };
-        }
-        return user;
-      })
-    );
-  };
-
-  const handleApproveKey = (userId: string, keyId: string) => {
-    setUsers((prev) =>
-      prev.map((user) => {
-        if (user.id === userId) {
-          return {
-            ...user,
-            apiKeys: user.apiKeys.map((key) => {
-              if (key.id === keyId) {
-                return {
-                  ...key,
-                  status: "approved",
-                };
-              }
-              return key;
-            }),
-          };
-        }
-        return user;
-      })
-    );
   };
 
   return (
@@ -213,7 +169,10 @@ const SuperAdmin = () => {
                             </div>
                             <div className="space-y-1">
                               <Progress
-                                value={calculateUsagePercentage(key.currentUsage, key.usageLimit)}
+                                value={calculateUsagePercentage(
+                                  key.currentUsage,
+                                  key.usageLimit
+                                )}
                                 className="h-2"
                               />
                               <p className="text-xs text-muted-foreground">
@@ -230,7 +189,7 @@ const SuperAdmin = () => {
                           variant="default"
                           size="sm"
                           onClick={() =>
-                            handleApproveKey(
+                            approveApiKey(
                               user.id,
                               user.apiKeys.find((k) => k.status === "pending")?.id || ""
                             )
@@ -242,7 +201,7 @@ const SuperAdmin = () => {
                         <Button
                           variant={user.status === "active" ? "destructive" : "default"}
                           size="sm"
-                          onClick={() => handleStatusToggle(user.id)}
+                          onClick={() => toggleUserStatus(user.id)}
                         >
                           {user.status === "active" ? "Suspend" : "Activate"}
                         </Button>
