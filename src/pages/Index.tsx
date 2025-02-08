@@ -2,6 +2,15 @@
 import { useState } from "react";
 import { ApiKeyCard } from "@/components/ApiKeyCard";
 import { CreateApiKeyDialog } from "@/components/CreateApiKeyDialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 interface ApiKey {
   id: string;
@@ -58,17 +67,39 @@ const Index = () => {
             No API keys created yet. Click the button above to create your first key.
           </div>
         ) : (
-          apiKeys.map((apiKey) => (
-            <ApiKeyCard
-              key={apiKey.id}
-              id={apiKey.id}
-              name={apiKey.name}
-              type={apiKey.type}
-              apiKey={apiKey.key}
-              lastUsed={apiKey.lastUsed}
-              onDelete={handleDeleteKey}
-            />
-          ))
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Key</TableHead>
+                <TableHead>Last Used</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {apiKeys.map((apiKey) => (
+                <TableRow key={apiKey.id}>
+                  <TableCell>{apiKey.name}</TableCell>
+                  <TableCell>
+                    <Badge variant={apiKey.type === "llm" ? "default" : "secondary"}>
+                      {apiKey.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-mono">{apiKey.key}</TableCell>
+                  <TableCell>{apiKey.lastUsed || "Never"}</TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => handleDeleteKey(apiKey.id)}
+                      className="text-destructive hover:text-destructive/80"
+                    >
+                      Delete
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </div>
     </div>
