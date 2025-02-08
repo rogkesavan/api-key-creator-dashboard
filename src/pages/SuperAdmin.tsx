@@ -18,7 +18,7 @@ interface User {
   name: string;
   email: string;
   role: "admin" | "user";
-  status: "active" | "suspended";
+  status: "active" | "suspended" | "pending";
   apiKeys: {
     id: string;
     name: string;
@@ -26,11 +26,11 @@ interface User {
     currentUsage: number;
     usageLimit: number;
     lastUsed: string;
+    status: "approved" | "pending";
   }[];
 }
 
 const SuperAdmin = () => {
-  // Sample data - in a real app, this would come from your backend
   const [users, setUsers] = useState<User[]>([
     {
       id: "1",
@@ -46,6 +46,16 @@ const SuperAdmin = () => {
           currentUsage: 750,
           usageLimit: 1000,
           lastUsed: "2024-03-10",
+          status: "approved",
+        },
+        {
+          id: "key2",
+          name: "Development API",
+          type: "search",
+          currentUsage: 0,
+          usageLimit: 500,
+          lastUsed: "-",
+          status: "pending",
         },
       ],
     },
@@ -57,12 +67,31 @@ const SuperAdmin = () => {
       status: "active",
       apiKeys: [
         {
-          id: "key2",
+          id: "key3",
           name: "Test API",
           type: "search",
           currentUsage: 250,
           usageLimit: 500,
           lastUsed: "2024-03-11",
+          status: "approved",
+        },
+      ],
+    },
+    {
+      id: "3",
+      name: "Alice Johnson",
+      email: "alice@example.com",
+      role: "user",
+      status: "pending",
+      apiKeys: [
+        {
+          id: "key4",
+          name: "New API",
+          type: "llm",
+          currentUsage: 0,
+          usageLimit: 1000,
+          lastUsed: "-",
+          status: "pending",
         },
       ],
     },
@@ -79,6 +108,28 @@ const SuperAdmin = () => {
           return {
             ...user,
             status: user.status === "active" ? "suspended" : "active",
+          };
+        }
+        return user;
+      })
+    );
+  };
+
+  const handleApproveKey = (userId: string, keyId: string) => {
+    setUsers((prev) =>
+      prev.map((user) => {
+        if (user.id === userId) {
+          return {
+            ...user,
+            apiKeys: user.apiKeys.map((key) => {
+              if (key.id === keyId) {
+                return {
+                  ...key,
+                  status: "approved",
+                };
+              }
+              return key;
+            }),
           };
         }
         return user;
@@ -136,7 +187,13 @@ const SuperAdmin = () => {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={user.status === "active" ? "success" : "destructive"}
+                        variant={
+                          user.status === "active"
+                            ? "default"
+                            : user.status === "pending"
+                            ? "secondary"
+                            : "destructive"
+                        }
                       >
                         {user.status}
                       </Badge>
@@ -147,7 +204,12 @@ const SuperAdmin = () => {
                           <div key={key.id} className="space-y-1">
                             <div className="flex justify-between text-sm">
                               <span>{key.name}</span>
-                              <Badge variant="outline">{key.type}</Badge>
+                              <div className="flex gap-2 items-center">
+                                <Badge variant="outline">{key.type}</Badge>
+                                {key.status === "pending" && (
+                                  <Badge variant="secondary">Pending Approval</Badge>
+                                )}
+                              </div>
                             </div>
                             <div className="space-y-1">
                               <Progress
@@ -163,13 +225,28 @@ const SuperAdmin = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant={user.status === "active" ? "destructive" : "default"}
-                        size="sm"
-                        onClick={() => handleStatusToggle(user.id)}
-                      >
-                        {user.status === "active" ? "Suspend" : "Activate"}
-                      </Button>
+                      {user.apiKeys.some((key) => key.status === "pending") ? (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() =>
+                            handleApproveKey(
+                              user.id,
+                              user.apiKeys.find((k) => k.status === "pending")?.id || ""
+                            )
+                          }
+                        >
+                          Approve
+                        </Button>
+                      ) : (
+                        <Button
+                          variant={user.status === "active" ? "destructive" : "default"}
+                          size="sm"
+                          onClick={() => handleStatusToggle(user.id)}
+                        >
+                          {user.status === "active" ? "Suspend" : "Activate"}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
