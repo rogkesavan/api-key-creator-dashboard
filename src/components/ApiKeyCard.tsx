@@ -8,7 +8,7 @@ interface ApiKeyCardProps {
   id: string;
   name: string;
   type: "llm" | "search";
-  key: string;
+  apiKey: string;
   lastUsed: string;
   onDelete: (id: string) => void;
 }
@@ -17,14 +17,14 @@ export const ApiKeyCard = ({
   id,
   name,
   type,
-  key,
+  apiKey,
   lastUsed,
   onDelete,
 }: ApiKeyCardProps) => {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
-    await navigator.clipboard.writeText(key);
+    await navigator.clipboard.writeText(apiKey);
     setCopied(true);
     toast.success("API key copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
@@ -56,7 +56,7 @@ export const ApiKeyCard = ({
       
       <div className="flex items-center space-x-2 mb-4">
         <code className="flex-1 p-2 bg-muted rounded font-mono text-sm">
-          {key.slice(0, 32)}...
+          {apiKey.slice(0, 32)}...
         </code>
         <Button
           variant="ghost"

@@ -58,14 +58,14 @@ const Index = () => {
             No API keys created yet. Click the button above to create your first key.
           </div>
         ) : (
-          apiKeys.map((key) => (
+          apiKeys.map((apiKey) => (
             <ApiKeyCard
-              key={key.id}
-              id={key.id}
-              name={key.name}
-              type={key.type}
-              key={key.key}
-              lastUsed={key.lastUsed}
+              key={apiKey.id}
+              id={apiKey.id}
+              name={apiKey.name}
+              type={apiKey.type}
+              apiKey={apiKey.key}
+              lastUsed={apiKey.lastUsed}
               onDelete={handleDeleteKey}
             />
           ))
